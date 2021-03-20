@@ -1,49 +1,73 @@
 #include "holberton.h"
+
 /**
-  * _printf - function that prints based on format specifier
-  * @format: takes in format specifier
-  * Return: return pointer to index
-  */
+ * _printf - custom function that format and print data
+ * @format:  list of types of arguments passed to the function
+ * Return: int
+ */
+
 int _printf(const char *format, ...)
 {
-char buffer[1024];
-int i, j = 0, a = 0, *index = &a;
-va_list valist;
-vtype_t spec[] = {
-{'c', format_c}, {'d', format_d}, {'s', format_s}, {'i', format_d},
-{'u', format_u}, {'%', format_perc}, {'x', format_h}, {'X', format_ch},
-{'o', format_o}, {'b', format_b}, {'p', format_p}, {'r', format_r},
-{'R', format_R}, {'\0', NULL}
+va_list list;
+int idx, j;
+int len_buf = 0;
+char *s;
+char *create_buff;
+
+type_t ops[] = {
+{"c", print_c},
+{"s", print_s},
+{"i", print_i},
+{"d", print_i},
+{"b", print_bin},
+{NULL, NULL}
 };
-if (!format)
+create_buff = malloc(1024 * sizeof(char));
+if (create_buff == NULL)
+{
+free(create_buff);
 return (-1);
-va_start(valist, format);
-for (i = 0; format[i] != '\0'; i++)
-{
-for (; format[i] != '%' && format[i] != '\0'; *index += 1, i++)
-{
-if (*index == 1024)
-{	_write_buffer(buffer, index);
-reset_buffer(buffer);
-*index = 0;
 }
-buffer[*index] = format[i];
-}
-if (format[i] == '\0')
+va_start(list, format);
+if (format == NULL || list == NULL)
+return (-1);
+for (idx = 0; format[idx] != '\0'; idx++)
+{
+if (format[idx] == '%' && format[idx + 1] == '%')
+continue;
+else if (format[idx] == '%')
+{
+if (format[idx + 1] == ' ')
+idx += _position(format, idx);
+for (j = 0; ops[j].f != NULL; j++)
+{
+if (format[idx + 1] == *(ops[j].op))
+{
+s = ops[j].f(list);
+if (s == NULL)
+return (-1);
+_strlen(s);
+_strcat(create_buff, s, len_buf);
+len_buf += _strlen(s);
+idx++;
 break;
-if (format[i] == '%')
-{	i++;
-for (j = 0; spec[j].tp != '\0'; j++)
+}
+}
+if (ops[j].f == NULL)
 {
-if (format[i] == spec[j].tp)
-{	spec[j].f(valist, buffer, index);
-break;
+create_buff[len_buf] = format[idx];
+len_buf++;
 }
 }
+else
+{
+create_buff[len_buf] = format[idx];
+len_buf++;
 }
 }
-va_end(valist);
-buffer[*index] = '\0';
-_write_buffer(buffer, index);
-return (*index);
+create_buff[len_buf] = '\0';
+write(1, create_buff, len_buf);
+va_end(list);
+free(create_buff);
+return (len_buf);
 }
