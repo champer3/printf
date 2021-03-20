@@ -1,47 +1,33 @@
-#ifndef HOLBERTON_H
-#define HOLBERTON_H
+#ifndef _HOLBERTON_H
+#define _HOLBERTON_H
 #include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
-/**
- * struct vtype - struct vtype
- * @tp: tp
- * @f: function
- *
- */
-typedef struct vtype
-{
-	char tp;
-	void (*f)();
-} vtype_t;
+
 int _printf(const char *format, ...);
-void print_char(va_list valist);
-void print_int(va_list valist);
-void print_float(va_list valist);
-void print_string(va_list valist);
-void _write_buffer(char *buffer, int *index);
+int _position(const char *s, int n);
 int _strlen(char *s);
-char *_memcpy(char *dest, char *src, unsigned int n);
-void format_s(va_list valist, char *buffer, int *index);
-void format_c(va_list valist, char *buffer, int *index);
-void format_d(va_list valist, char *buffer, int *index);
-char *itos(char str[], long int num);
-char *utos(char str[], int num);
-int num_len(int num);
-int float_len(double f);
-void format_i(va_list valist, char *buffer, int *index);
-void format_u(va_list valist, char *buffer, int *index);
-void format_perc(va_list valist, char *buffer, int *index);
-void format_p(va_list valist, char *buffer, int *index);
-void format_lx(va_list valist, char *buffer, int *index);
-char *tostring(char str[], int num);
-int num_len(int num);
-void reset_buffer(char buffer[]);
-void *rot13(char *s);
-void rev_string(char *s);
-void format_h(va_list valist, char *buffer, int *index);
-void format_ch(va_list valist, char *buffer, int *index);
-void format_o(va_list valist, char *buffer, int *index);
-void format_b(va_list valist, char *buffer, int *index);
-void format_r(va_list valist, char *buffer, int *index);
-void format_R(va_list valist, char *buffer, int *index);
-#endif /* HOLBERTON_H */
+char *_strcat(char *dest, char *src, int n);
+int _abs(int n);
+int _numlen(int n);
+void *rev_string(char *s);
+
+/**
+ * struct type - Struct data type
+ *
+ * @op: data type argument
+ * @f: The function associated
+ */
+
+typedef struct type
+{
+	char *op;
+	char *(*f)(va_list);
+} type_t;
+
+char *print_c(va_list list);
+char *print_s(va_list list);
+char *print_i(va_list list);
+char *print_bin(va_list list);
+#endif /* #ifndef _HOLBERTON_H */ 
