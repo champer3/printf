@@ -1,49 +1,154 @@
 #include "holberton.h"
+#include <stdarg.h>
+#include <stdlib.h>
+
 /**
-  * _printf - function that prints based on format specifier
-  * @format: takes in format specifier
-  * Return: return pointer to index
-  */
-int _printf(const char *format, ...)
+ * funcswitch - dispatch the appropriate data to the appropriate formatter
+ * @y: The pointer to % in the spec string
+ * @specifier: the spec character
+ * @al: the va_list to pull args from
+ * @q: a pointer to the globs
+ * Return: The amount to shift the pointer forward in the calling function
+ */
+int funcswitch(char *y, char specifier, va_list al, glob *q)
 {
-char buffer[1024];
-int i, j = 0, a = 0, *index = &a;
-va_list valist;
-vtype_t spec[] = {
-{'c', format_c}, {'d', format_d}, {'s', format_s}, {'i', format_d},
-{'u', format_u}, {'%', format_perc}, {'x', format_h}, {'X', format_ch},
-{'o', format_o}, {'b', format_b}, {'p', format_p}, {'r', format_r},
-{'R', format_R}, {'\0', NULL}
-};
-if (!format)
+switch (specifier)
+{
+case 'd':
+case 'i':
+return (di_format(y, va_arg(al, long int), q));
+case 'o':
+return (o_format(y, va_arg(al, unsigned long int), q));
+case 'u':
+return (u_format(y, va_arg(al, unsigned long int), q));
+case 'x':
+return (x_format(y, va_arg(al, unsigned long int), q));
+case 'X':
+return (X_format(y, va_arg(al, unsigned long int), q));
+case 'c':
+return (c_format(y, va_arg(al, int), q));
+case 's':
+return (s_format(y, va_arg(al, char *), q));
+case 'p':
+return (p_format(y, va_arg(al, void *), q));
+case 'S':
+return (S_format(y, va_arg(al, char *), q));
+case 'r':
+return (r_format(y, va_arg(al, char *), q));
+case 'R':
+return (R_format(y, va_arg(al, char *), q));
+case 'b':
+return (b_format(y, va_arg(al, unsigned int), q));
+case '%':
+if (*y == '%' && *(y + 1) == '%')
+return (c_format("%c", '%', q));
+case '\0':
+/*!!!-risky behavior here-!!!*/
+q->count = -1;
+return (1);
+default:
+c_format("%c", '%', q);
+c_format("%c", specifier, q);
+return (2);
+}
+}
+
+/**
+ * getspec - get the first specifier occurrence after a %
+ * @s: the start of the format string (minus the beginning %)
+ * Return: the spec char
+ */
+char getspec(char *s)
+{
+int i;
+
+for (i = 0; 1 ; i++)
+{
+switch (s[i])
+{
+case 'd':
+case 'i':
+case 'o':
+case 'u':
+case 'x':
+case 'X':
+case 'c':
+case 's':
+case 'p':
+case 'S':
+case 'r':
+case 'R':
+case 'b':
+return (s[i]);
+case '%':
+if (i == 0)
+return (s[i]);
+else
+return (s[0]);
+case '\0':
+return (s[0]);
+}
+}
+}
+
+/**
+ * _printf - the custom implementation of the printf function
+ * @fmt: the format string
+ *
+ * Return: the number of characters printed
+ */
+int _printf(const char *fmt, ...)
+{
+int i;
+char tmp;
+va_list vl;
+/* The print counter is q */
+glob q;
+
+q.count = 0;
+q.bufind = 0;
+resetbuf(q.buf);
+
+if (!fmt)
 return (-1);
-va_start(valist, format);
-for (i = 0; format[i] != '\0'; i++)
+
+va_start(vl, fmt);
+
+i = 0;
+while (fmt[i] != '\0')
 {
-for (; format[i] != '%' && format[i] != '\0'; *index += 1, i++)
+if (fmt[i] == '%')
 {
-if (*index == 1024)
-{	_write_buffer(buffer, index);
-reset_buffer(buffer);
-*index = 0;
-}
-buffer[*index] = format[i];
-}
-if (format[i] == '\0')
-break;
-if (format[i] == '%')
-{	i++;
-for (j = 0; spec[j].tp != '\0'; j++)
+tmp = getspec((char *)fmt + i + 1);
+i = i + funcswitch((char *)fmt + i, tmp, vl, &q);
+} else
 {
-if (format[i] == spec[j].tp)
-{	spec[j].f(valist, buffer, index);
-break;
+c_format("%c", fmt[i], &q);
+i = i + 1;
 }
 }
+va_end(vl);
+
+if (q.bufind)
+{
+write(1, q.buf, q.bufind);
 }
+
+return (q.count);
 }
-va_end(valist);
-buffer[*index] = '\0';
-_write_buffer(buffer, index);
-return (*index);
+
+/**
+ * resetbuf - reset the buffer to be full of zeros
+ * @x: a buffer of size 1024 to set to zeros
+ * Return: always 0
+ */
+int resetbuf(char *x)
+{
+int i;
+
+for (i = 0; i < 1024; i++)
+{
+x[i] = '\0';
+}
+return (0);
 }
